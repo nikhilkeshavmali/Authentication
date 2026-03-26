@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>OTP Verification</title>
+    <style>
+      body {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: 100vh;
+        background: #f2f2f2;
+        font-family: Arial;
+      }
+
+      .otp-box {
+        background: white;
+        padding: 40px;
+        border-radius: 10px;
+        text-align: center;
+        box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
+      }
+
+      input {
+        width: 50px;
+        height: 50px;
+        font-size: 20px;
+        text-align: center;
+        margin: 5px;
+        border: 1px solid #ccc;
+        border-radius: 5px;
+      }
+
+      button {
+        margin-top: 20px;
+        padding: 10px 20px;
+        border: none;
+        background: #4caf50;
+        color: white;
+        border-radius: 5px;
+        cursor: pointer;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="otp-box">
+      <h2>Enter 4 Digit OTP</h2>
+
+      <form action="/verifyotp" method="POST">
+        <!-- IMPORTANT PART -->
+        <input type="text" name="userotp" maxlength="1" required />
+        <input type="text" name="userotp" maxlength="1" required />
+        <input type="text" name="userotp" maxlength="1" required />
+        <input type="text" name="userotp" maxlength="1" required />
+
+        <br />
+        <button type="submit">Verify OTP</button>
+      </form>
+    </div>
+  </body>
+</html>

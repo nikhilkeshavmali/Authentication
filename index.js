@@ -25,9 +25,9 @@ const connection = require("./config/db");
 // ================= SESSION CONFIG =================
 app.use(
   session({
-    secret: "nikhilsecret", // Secret key to sign session ID
-    resave: false, // Do not save session if not modified
-    saveUninitialized: false, // Do not create session until something stored
+    secret: "nikhilsecret",
+    resave: false,
+    saveUninitialized: false,
   }),
 );
 
@@ -46,7 +46,6 @@ app.post("/login", async (req, res) => {
   try {
     const { username, password } = req.body;
 
-    // 1️⃣ Check if user exists in database
     const isUserExists = await userSchema.findOne({ username });
 
     if (!isUserExists) {
@@ -55,7 +54,6 @@ app.post("/login", async (req, res) => {
       );
     }
 
-    // 2️⃣ Compare entered password with hashed password
     const isPasswordMatch = await bcrypt.compare(
       password,
       isUserExists.password,
@@ -67,12 +65,10 @@ app.post("/login", async (req, res) => {
       );
     }
 
-    // 3️⃣ If both correct → create session
     req.session.loginId = isUserExists._id;
 
     console.log("Login Successfully");
 
-    // Redirect to dashboard
     return res.redirect("/dashboard");
   } catch (err) {
     console.log("Internal Server Error", err);
@@ -83,12 +79,10 @@ app.post("/login", async (req, res) => {
 // ================= DASHBOARD =================
 app.get("/dashboard", async (req, res) => {
   try {
-    // Check if user is logged in
     if (!req.session.loginId) {
       return res.redirect("/");
     }
 
-    // Find logged-in user data
     const user = await userSchema.findById(req.session.loginId);
 
     res.render("dashboard", { username: user.username });
@@ -121,27 +115,97 @@ app.post("/signup", async (req, res) => {
       </script>`);
     }
 
+    // Stored all the user in session
+    req.session.userDetails = req.body;
+
+    let otp = Math.floor(1000 + Math.random() * 9000); // proper 4 digit otp
+
+    req.session.OTP = otp;
+
+    console.log("Generated OTP:", otp);
+
+    res.send(
+      `<script>
+        alert('Your OTP is ${otp}');
+        window.location.assign('/otppage');
+      </script>`,
+    );
+
     // Hash password before saving
-    const hashpassword = await bcrypt.hash(password, 10);
+    // const hashpassword = await bcrypt.hash(password, 10);
 
-    const result = new userSchema({
-      username,
-      useremail,
-      password: hashpassword,
-      phone,
-    });
+    // const result = new userSchema({
+    //   username,
+    //   useremail,
+    //   password: hashpassword,
+    //   phone,
+    // });
 
-    await result.save();
+    // await result.save();
 
-    console.log("User Registered");
+    // console.log("User Registered");
 
-    return res.send(`<script>
-      alert("Profile Created Successfully");
-      window.location.href="/";
-    </script>`);
+    // return res.send(`<script>
+    //   alert("Profile Created Successfully");
+    //   window.location.href="/";
+    // </script>`);
   } catch (error) {
     console.log("Internal Server Error:", error);
     res.status(500).send("Error");
+  }
+});
+
+app.get("/otppage", (req, res) => {
+  res.render("otppage");
+});
+
+// ================= VERIFY OTP =================
+app.post("/verifyotp", async (req, res) => {
+  try {
+    let userotp = "";
+
+    // If inputs are separate like otp1 otp2 otp3 otp4
+    if (Array.isArray(req.body.userotp)) {
+      userotp = req.body.userotp.join("");
+    } else {
+      userotp = req.body.userotp;
+    }
+
+    let actualOTP = req.session.OTP;
+
+    if (userotp == actualOTP) {
+      const { username, useremail, password, phone } = req.session.userDetails;
+
+      const hashpassword = await bcrypt.hash(password, 10);
+
+      const result = new userSchema({
+        username,
+        useremail,
+        password: hashpassword,
+        phone,
+      });
+
+      await result.save();
+
+      console.log("User Register");
+
+      return res.send(
+        `<script>
+          alert('Congrats Happy to onboarding you..');
+          window.location.href='/';
+        </script>`,
+      );
+    } else {
+      return res.send(
+        `<script>
+          alert('Wrong OTP, please enter valid OTP');
+          window.location.assign('/otppage');
+        </script>`,
+      );
+    }
+  } catch (error) {
+    console.log(error);
+    res.status(500).send("Server Error");
   }
 });
 
